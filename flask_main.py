@@ -28,6 +28,8 @@ from apiclient import discovery
 # Globals
 ###
 import config
+
+app = flask.Flask(__name__)
 if __name__ == "__main__":
     CONFIG = config.configuration()
     app.debug = CONFIG.DEBUG
@@ -38,7 +40,7 @@ else:
     app.secret_key = os.environ.get('Secret_Key', None)
 
 
-app = flask.Flask(__name__)
+
 test = os.environ.get('author', None)
 app.logger.debug("TEST: ", test)
 logging.debug("TEST: ", test)
