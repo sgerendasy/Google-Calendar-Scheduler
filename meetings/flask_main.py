@@ -7,6 +7,9 @@ from apiclient.discovery import build  # google api
 from dateutil import tz
 from freeAndBusyTimeCalculator import freeBusyTimes
 
+from flask.ext.restful import Api
+
+
 import json
 import logging
 
@@ -36,6 +39,11 @@ app = flask.Flask(__name__)
 app.debug = CONFIG.DEBUG
 app.logger.setLevel(logging.DEBUG)
 app.secret_key = CONFIG.SECRET_KEY
+
+api = Api(app)
+api.add_resource(UserAPI, "/users", '/users/<string:user_id>')
+api.add_resource(UserActivationAPI, '/users/<string:user_id>/activate')
+
 
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
