@@ -34,15 +34,16 @@ if __name__ == "__main__":
     CONFIG = config.configuration()
     app.debug = CONFIG.DEBUG
     app.secret_key = CONFIG.SECRET_KEY
+    CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
 else:
     # CONFIG = config.configuration(proxied=True)
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
+    CLIENT_SECRET_FILE = os.environ.get('google_key_file', None)
 
 
 
 test = os.environ.get('author', None)
-app.logger.debug("TEST: ", test)
 logging.debug("TEST: ", test)
 
 app.logger.setLevel(logging.DEBUG)
@@ -50,7 +51,7 @@ app.logger.setLevel(logging.DEBUG)
 
 
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
-CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
+
 APPLICATION_NAME = 'MeetMe class project'
 
 
