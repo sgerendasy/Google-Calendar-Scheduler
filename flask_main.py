@@ -42,10 +42,6 @@ else:
     CLIENT_SECRET_FILE = os.environ.get('google_key_file', None)
 
 
-
-test = os.environ.get('author', None)
-logging.debug("TEST: ", test)
-
 app.logger.setLevel(logging.DEBUG)
 
 
