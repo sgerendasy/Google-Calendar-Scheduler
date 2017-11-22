@@ -43,6 +43,10 @@ SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
 APPLICATION_NAME = 'MeetMe class project'
 
+test = os.environ.get('author', None)
+app.logger.debug("TEST: ", test)
+
+
 #############################
 #
 #  Pages (routed from URLs)
