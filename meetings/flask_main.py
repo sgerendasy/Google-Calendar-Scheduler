@@ -45,6 +45,7 @@ APPLICATION_NAME = 'MeetMe class project'
 
 test = os.environ.get('author', None)
 app.logger.debug("TEST: ", test)
+logging.debug("TEST: ", test)
 
 
 #############################
