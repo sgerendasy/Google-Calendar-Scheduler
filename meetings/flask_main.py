@@ -6,7 +6,7 @@ import uuid
 from apiclient.discovery import build  # google api
 from dateutil import tz
 from freeAndBusyTimeCalculator import freeBusyTimes
-
+import os
 
 import json
 import logging

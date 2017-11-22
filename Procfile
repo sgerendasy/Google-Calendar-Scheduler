@@ -1,1 +1,1 @@
-web: gunicorn flask_main:app
+web: gunicorn meetings.wsgi --log-file -
