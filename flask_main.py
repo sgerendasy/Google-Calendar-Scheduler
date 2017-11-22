@@ -30,22 +30,28 @@ from apiclient import discovery
 import config
 if __name__ == "__main__":
     CONFIG = config.configuration()
+    app.debug = CONFIG.DEBUG
+    app.secret_key = CONFIG.SECRET_KEY
 else:
-    CONFIG = config.configuration(proxied=True)
+    # CONFIG = config.configuration(proxied=True)
+    app.debug = os.environ.get('debug', None)
+    app.secret_key = os.environ.get('Secret_Key', None)
+
 
 app = flask.Flask(__name__)
-app.debug = CONFIG.DEBUG
+test = os.environ.get('author', None)
+app.logger.debug("TEST: ", test)
+logging.debug("TEST: ", test)
+
 app.logger.setLevel(logging.DEBUG)
-app.secret_key = CONFIG.SECRET_KEY
+
 
 
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
 APPLICATION_NAME = 'MeetMe class project'
 
-test = os.environ.get('author', None)
-app.logger.debug("TEST: ", test)
-logging.debug("TEST: ", test)
+
 
 
 #############################
