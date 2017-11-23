@@ -310,7 +310,6 @@ def oauth2callback():
                                client_secret=clientSecret,
                                scope=SCOPES,
                                redirect_uri=flask.url_for('oauth2callback', _external=True))
-    app.logger.debug("FLOW: ", flow)
 
     # Note we are *not* redirecting above. We are noting *where*
     # we will redirect to, which is this function.
