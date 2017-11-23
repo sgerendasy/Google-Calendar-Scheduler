@@ -8,6 +8,8 @@ from dateutil import tz
 from freeAndBusyTimeCalculator import freeBusyTimes
 import os
 
+import google.oauth2.credentials
+
 import json
 import logging
 
@@ -31,15 +33,20 @@ import config
 
 app = flask.Flask(__name__)
 if __name__ == "__main__":
+    isMain = True
     CONFIG = config.configuration()
     app.debug = CONFIG.DEBUG
     app.secret_key = CONFIG.SECRET_KEY
     CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
 else:
+    isMain = False
     # CONFIG = config.configuration(proxied=True)
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
     CLIENT_SECRET_FILE = os.environ.get('google_key_file', None)
+    clientId = os.environ.get('clientID', None)
+    clientSecret = os.environ.get('clientSecret', None)
+
 
 
 app.logger.setLevel(logging.DEBUG)
@@ -259,6 +266,8 @@ def valid_credentials():
     credentials = client.OAuth2Credentials.from_json(
         flask.session['credentials'])
 
+    print("Creds: ", credentials)
+
     if (credentials.invalid or credentials.access_token_expired):
         return None
     return credentials
@@ -291,10 +300,18 @@ def oauth2callback():
     and so on.
     """
     app.logger.debug("Entering oauth2callback")
-    flow = client.flow_from_clientsecrets(
-        CLIENT_SECRET_FILE,
-        scope=SCOPES,
-        redirect_uri=flask.url_for('oauth2callback', _external=True))
+    if(isMain):
+        flow = client.flow_from_clientsecrets(
+            CLIENT_SECRET_FILE,
+            scope=SCOPES,
+            redirect_uri=flask.url_for('oauth2callback', _external=True))
+    else:
+        flow = OAuth2WebServerFlow(client_id=clientId,
+                               client_secret=clientSecret,
+                               scope='https://www.googleapis.com/auth/calendar',
+                               redirect_uri='http://example.com/auth_return')
+
+    
     # Note we are *not* redirecting above. We are noting *where*
     # we will redirect to, which is this function.
 
