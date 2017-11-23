@@ -309,7 +309,7 @@ def oauth2callback():
         flow = OAuth2WebServerFlow(client_id=clientId,
                                client_secret=clientSecret,
                                scope='https://www.googleapis.com/auth/calendar',
-                               redirect_uri='http://example.com/auth_return')
+                               redirect_uri=flask.url_for('oauth2callback', _external=True))
 
     
     # Note we are *not* redirecting above. We are noting *where*
