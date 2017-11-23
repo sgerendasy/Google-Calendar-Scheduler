@@ -8,7 +8,6 @@ from dateutil import tz
 from freeAndBusyTimeCalculator import freeBusyTimes
 import os
 
-import google.oauth2.credentials
 
 import json
 import logging
@@ -311,7 +310,7 @@ def oauth2callback():
                                scope=SCOPES,
                                redirect_uri=flask.url_for('oauth2callback', _external=True))
 
-    
+
     # Note we are *not* redirecting above. We are noting *where*
     # we will redirect to, which is this function.
 
