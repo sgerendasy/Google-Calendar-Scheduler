@@ -19,10 +19,10 @@ env:
 #  with debugging turned on unless it is unset in CONFIG.py
 # 
 run:	env
-	($(INVENV) cd meetings; python3 flask_main.py) ||  true
+	($(INVENV) python3 flask_main.py) ||  true
 
 test:	env
-	$(INVENV) cd meetings; nosetests tests/test_freeTimes.py 
+	$(INVENV) nosetests tests/test_freeTimes.py 
 
 
 ##

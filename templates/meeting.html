@@ -75,6 +75,35 @@
 
 
   <script>
+    function initialDisplayOfTimes(){
+      var checkedEvents = [];
+      var startBounds = document.getElementById("StartTime").value;
+      var endBounds = document.getElementById("EndTime").value;
+      var dateRanges = document.getElementById("daterange").value;
+      var meetingID = document.getElementById("meetingID").value;
+      var userEmail = document.getElementById("userEmail").value;
+    $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges,
+                                meetingID: meetingID, userEmail: userEmail}, 
+    function(data) { 
+        var toList = data.result;
+        var listLength = toList.length;
+        document.getElementById("busyEntries").innerHTML = "";
+        for(var i = 0; i < listLength; i++){
+              var newElement = document.createElement("W");
+              newElement.setAttribute('id', toList[i]);
+              if(toList[i].substring(0,1) != "f" && toList[i].substring(0,1) != "b"){
+                  newElement.innerHTML = ("<h5>" + "<br>" + toList[i] + "\n");
+              }
+              else{
+                  newElement.innerHTML = ("<li>" + toList[i] + "\n");
+              }
+              
+              $("#busyEntries").append(newElement);
+
+        }
+
+    });}
+    initialDisplayOfTimes()
 
     var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
     var PARSE_TIMES_URL = SCRIPT_ROOT + "/parse_times";
@@ -113,11 +142,11 @@
             checkedEvents.push(calendarEvents[i].value);
           }
         }
-        startBounds = document.getElementById("StartTime").value;
-        endBounds = document.getElementById("EndTime").value;
-        dateRanges = document.getElementById("daterange").value;
-        meetingID = document.getElementById("meetingID").value;
-        userEmail = document.getElementById("userEmail").value;
+        var startBounds = document.getElementById("StartTime").value;
+        var endBounds = document.getElementById("EndTime").value;
+        var dateRanges = document.getElementById("daterange").value;
+        var meetingID = document.getElementById("meetingID").value;
+        var userEmail = document.getElementById("userEmail").value;
         $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges,
                                       meetingID: meetingID, userEmail: userEmail}, 
           function(data) { 

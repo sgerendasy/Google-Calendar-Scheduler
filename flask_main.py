@@ -126,7 +126,6 @@ def choose():
         if c[0] == 'a':
             nums.append(int(c[1:]))
     nums.sort()
-    print("NUMS:", nums)
 
     flask.g.meetingID = (nums[-1] + 1)
     mongoCollectionName = "a" + str(flask.g.meetingID)
@@ -137,10 +136,12 @@ def choose():
 
 @app.route("/meeting/<meetingID>")
 def meeting(meetingID):
+    app.logger.debug("In Meeting")
     credentials = valid_credentials()
+    flask.session['meetingID'] = meetingID
     if not credentials:
         app.logger.debug("Redirecting to authorization")
-        return flask.redirect(flask.url_for('oauth2callback'))
+        return flask.redirect(flask.url_for('oauth2callbackmeeting'))
 
     service = get_gcal_service(credentials)
     gcal_service = service[0]
@@ -411,6 +412,57 @@ def oauth2callback():
         # the main screen
         app.logger.debug("Got credentials")
         return flask.redirect(flask.url_for('choose'))
+
+
+@app.route('/oauth2callbackmeeting')
+def oauth2callbackmeeting():
+    """
+    The 'flow' has this one place to call back to.  We'll enter here
+    more than once as steps in the flow are completed, and need to keep
+    track of how far we've gotten. The first time we'll do the first
+    step, the second time we'll skip the first step and do the second,
+    and so on.
+    """
+    app.logger.debug("Entering oauth2callback meeting")
+    if(isMain):
+        flow = client.flow_from_clientsecrets(
+            CLIENT_SECRET_FILE,
+            scope=SCOPES,
+            redirect_uri=flask.url_for('oauth2callbackmeeting', _external=True))
+    else:
+        flow = OAuth2WebServerFlow(client_id=clientId,
+                               client_secret=clientSecret,
+                               scope=SCOPES,
+                               redirect_uri=flask.url_for('oauth2callbackmeeting', _external=True))
+
+    # Note we are *not* redirecting above. We are noting *where*
+    # we will redirect to, which is this function.
+
+    # The *second* time we enter here, it's a callback
+    # with 'code' set in the URL parameter.  If we don't
+    # see that, it must be the first time through, so we
+    # need to do step 1.
+    app.logger.debug("Got flow meeting")
+    if 'code' not in flask.request.args:
+        app.logger.debug("Code not in flask.request.args meeting")
+        auth_uri = flow.step1_get_authorize_url()
+        return flask.redirect(auth_uri)
+        # This will redirect back here, but the second time through
+        # we'll have the 'code' parameter set
+    else:
+        # It's the second time through ... we can tell because
+        # we got the 'code' argument in the URL.
+        app.logger.debug("Code was in flask.request.args meeting")
+        auth_code = flask.request.args.get('code')
+        credentials = flow.step2_exchange(auth_code)
+        flask.session['credentials'] = credentials.to_json()
+        # Now I can build the service and execute the query,
+        # but for the moment I'll just log it and go back to
+        # the main screen
+        app.logger.debug("Got credentials for meeting")
+        meetingID = flask.session['meetingID']
+        app.logger.debug("MEETINGID: ", meetingID)
+        return flask.redirect(flask.url_for('meeting', meetingID=meetingID))
 
 #
 #  Option setting:  Buttons or forms that add some
