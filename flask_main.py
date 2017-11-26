@@ -73,8 +73,9 @@ APPLICATION_NAME = 'MeetMe class project'
 
 try:
     dbclient = MongoClient(MONGO_CLIENT_URL)
+    print("SUCCESS")
     db = getattr(dbclient, CONFIG.DB)
-
+    print("SUCCESS")
 except:
     print("Failure opening database.  Is Mongo running? Correct password?")
     print("MONGO_CLIENT_URL: ", MONGO_CLIENT_URL)
