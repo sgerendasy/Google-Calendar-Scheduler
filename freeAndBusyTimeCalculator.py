@@ -21,7 +21,7 @@ def freeBusyTimes(eSet, startingBounds, endingBounds):
         print("In start: ", startDay, "  end: ", endDay)
         while(today):
             if(i < len(eSet)-1):
-                print("eSet[{}].date():".format(i), eSet[i].date(), "  startDay.date(): ", startDay.date())
+                print("eSet[{}]:".format(i), eSet[i], "  startDay: ", startDay)
                 if eSet[i].date() == startDay.date():
                     if eSet[i].format("HHmm") <= startDay.format("HHmm"):
                         print("AH: 1")
@@ -35,7 +35,7 @@ def freeBusyTimes(eSet, startingBounds, endingBounds):
                         busy = True
                         startOfDayHandled = True
                     if busy:
-                        print("AH: 3")
+                        print("AH: 3 ", eSet[i+1], "   ", i)
                         if(eSet[i+1] >= endDay):
                             print("AH: 4")
                             freeBusyList.append(["busy: ", eSet[i], endDay])
