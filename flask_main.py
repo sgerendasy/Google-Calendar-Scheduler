@@ -107,7 +107,7 @@ def choose():
     # I wanted to put what follows into a function, but had
     # to pull it back here because the redirect has to be a
     # 'return'
-    app.logger.debug("Checking credentials for Google calendar access")
+    app.logger.debug("In /choose")
     credentials = valid_credentials()
     if not credentials:
         app.logger.debug("Redirecting to authorization")
@@ -120,8 +120,15 @@ def choose():
 
     flask.g.calendars = list_calendars(gcal_service)
 
+    dbCollections = db.collection_names()
+    nums = [0]
+    for c in dbCollections:
+        if c[0] == 'a':
+            nums.append(int(c[1:]))
+    nums.sort()
+    print("NUMS:", nums)
 
-    flask.g.meetingID = random.randint(0,10000)
+    flask.g.meetingID = (nums[-1] + 1)
     mongoCollectionName = "a" + str(flask.g.meetingID)
     collection = db[mongoCollectionName]
     collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], "endTime":flask.session['endInput']})
@@ -130,14 +137,8 @@ def choose():
 
 @app.route("/meeting/<meetingID>")
 def meeting(meetingID):
-    # We'll need authorization to list calendars
-    # I wanted to put what follows into a function, but had
-    # to pull it back here because the redirect has to be a
-    # 'return'
 
-    # I'll need to check to see if meetingID is valid mongoDB entry. If not, redirect to a "meeting not found" page
-
-    app.logger.debug("Checking credentials for Google calendar access")
+    app.logger.debug("In /meeting")
     credentials = valid_credentials()
     if not credentials:
         app.logger.debug("Redirecting to authorization")
@@ -157,8 +158,8 @@ def meeting(meetingID):
             collectionExists = True
     if not collectionExists:
         return render_template('noSuchMeeting.html')
-    startingInfo = db[mongoCollectionName].find({"init":1})
 
+    startingInfo = db[mongoCollectionName].find({"init":1})
     flask.session['daterange'] = startingInfo[0]["dateRange"]
     flask.session['endInput'] = startingInfo[0]["endTime"]
     flask.session['startInput'] = startingInfo[0]["startTime"]
@@ -174,6 +175,9 @@ def updateCalendar():
     calendarToAdd = json.loads(request.args.get("val"))
     startingBound = request.args.get("startTime", type=str)
     endingBound = request.args.get("endTime", type=str)
+    app.logger.debug("calendarToAdd:", calendarToAdd)
+    app.logger.debug("startingBound:", startingBound)
+    app.logger.debug("endingBound:", endingBound)
 
     dateRanges = request.args.get("dates", type=str)
     dateRanges = dateRanges.split(" ")
@@ -218,6 +222,7 @@ def updateCalendar():
 
     allInDBToRemove = collection.find({"email":userEmail})
     for e in allInDBToRemove:
+        print("removing: ", e)
         collection.remove(e)
 
     for calendar in calendarToAdd:
@@ -236,9 +241,13 @@ def updateCalendar():
         allEntries.append([tempStart, tempEnd])
 
     allEntries.sort()
+    print("ALLENTRIES: ", allEntries)
     unionEntries = disjointSetBusyTimes(allEntries)
+    print("UNIONENTRIES: ", unionEntries)
     displayEntries = freeBusyTimes(unionEntries, startingBoundDateArray, endingBoundDateArray)
+    print("DISPLAYENTRIES: ", displayEntries)
     formattedEntries = formatEntries(displayEntries)
+    print("FORMATTEDENTRIES: ", formattedEntries)
 
     return flask.jsonify(result=formattedEntries)
 

@@ -78,7 +78,7 @@
 <h2>Login to existing meeting</h2>
 Meeting ID
 <form>
-<input type="text" id="meetingID">
+<input type="number" id="meetingID">
 <input type="button" id="Login" value="Login" />
 </form>
 
@@ -93,9 +93,7 @@ Meeting ID
       var meetingID = document.getElementById('meetingID');
       var location = "/meeting/" + meetingID.value;
       window.location = location;
-      
     });
-
 
     var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
     var PARSE_TIMES_URL = SCRIPT_ROOT + "/parse_times";
