@@ -8,6 +8,10 @@ start and end time.
 
 
 def freeBusyTimes(eSet, startingBounds, endingBounds):
+    print("In Free Busy Times")
+    print("eSet", eSet)
+    print("startingBounds: ", startingBounds)
+    print("endingBounds: ", endingBounds)
     freeBusyList = []
     i = 0
     for startDay, endDay in zip(startingBounds, endingBounds):

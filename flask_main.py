@@ -180,6 +180,7 @@ def updateCalendar():
     app.logger.debug("endingBound:", endingBound)
 
     dateRanges = request.args.get("dates", type=str)
+    print("dateRanges: ", dateRanges)
     dateRanges = dateRanges.split(" ")
     dateRanges.remove("-")
     dateRanges[0] = dateRanges[0].split("/")
@@ -200,6 +201,8 @@ def updateCalendar():
     for i in range(numberOfDays):
         startingBoundDateArray.append(arrowStartBound.replace(days=+i))
         endingBoundDateArray.append(arrowEndBound.replace(days=+i))
+    print("startingBoundDateArray: ", startingBoundDateArray)
+    print("endingBoundDateArray: ", endingBoundDateArray)
 
     if(startingBound == ""):
         # set default starting bound to 9:00am
