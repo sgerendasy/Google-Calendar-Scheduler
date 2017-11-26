@@ -8,6 +8,12 @@
  * style sheets in the html. 
  */
 
+<style>
+.content {
+    max-width: 500px;
+    margin: auto;
+}
+</style>
 body {
-    background-color: "#ccffcc";
+    background-color: "#aaffcc";
 }

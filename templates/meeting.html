@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html lang="en"> <head>
+<title>Appointments</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" type="text/css" href="/static/css/busy.css"/>
+
+<link rel="stylesheet" type="text/css"
+     href="//cdn.jsdelivr.net/bootstrap/latest/css/bootstrap.css"
+/>
+
+
+<!-- jquery from a content distribution network; probably cached -->
+<script type="text/javascript"
+     src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+</script>
+
+<!-- Ideally the rest of our javascript dependencies would be
+     bundled and minified with 'browserify', but I've found that
+     it difficult to handle browserify dependencies for class
+     projects.  So, we'll pick up moment and a date range picker
+     from CDNs instead.
+-->
+
+<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+
+</head>
+
+<body>
+<div class="container">
+
+<h1>Meeting ID: {{g.meetingID}} </h1>
+<input type="hidden" id="StartTime" value="{{session.startInput}}">
+<input type="hidden" id="EndTime" value="{{session.endInput}}">
+  <input type="hidden" id="daterange" value="{{session.daterange}}">
+  <input type="hidden" id="meetingID" value="{{g.meetingID}}">
+  <input type="hidden" id="userEmail" value="{{g.userEmail}}">
+
+
+{{session.daterange}}
+&emsp;&emsp;
+{{session.startInput}} - {{session.endInput}}
+
+</form>
+
+    <!--
+    Show the calendar list (if we have it).  This will need to be turned into
+    a form from which calendars can be picked. Up to three entries are
+    shown in each row (but the order is across then down; I would
+    prefer down then across). 
+    -->
+{% if g.calendars is defined  %}
+  <div class="row">
+  {% for cal in g.calendars if cal.selected %}
+          <input class="calendarName" type="checkbox" id="{{loop.index}}" value="{{cal.id}}"  name="calEvent" onchange="myFunction({id: id})">
+              &nbsp;
+              {{ cal.summary }}
+              &nbsp; &nbsp; &nbsp; &nbsp;
+         {% if loop.index is divisibleby 3 %}
+          </div> <div class="row">
+         {% endif %}
+  {% endfor %}
+  </div>
+{% endif %}
+
+
+
+
+<p id="busyEntries" name="busyEntries">
+</p>
+
+
+  <script>
+
+    var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
+    var PARSE_TIMES_URL = SCRIPT_ROOT + "/parse_times";
+
+    $('input[name="StartTime"]').change(
+         function() {
+             var startTime = $(this).val();
+                 $.getJSON(PARSE_TIMES_URL, { time:startTime}, 
+                  function(data) {
+                     var time = data.result;
+                     if(time["time"] == "failed"){
+                      console.log("Invalid time");
+                      document.getElementById("StartTime").value="";
+                     }
+       } // end of handler function
+     );// End of getJSON
+    });
+    $('input[name="EndTime"]').change(
+         function() {
+             var endTime = $(this).val();
+                 $.getJSON(PARSE_TIMES_URL, { time:endTime}, 
+                  function(data) {
+                     var time = data.result;
+                     if(time["time"] == "failed"){
+                      console.log("Invalid time");
+                      document.getElementById("EndTime").value="";
+                     }
+       } // end of handler function
+     );// End of getJSON
+    });
+    function myFunction(id) {
+        var calendarEvents = document.getElementsByName("calEvent");
+        var checkedEvents = [];
+        for(i = 0; i < calendarEvents.length; i++){
+          if(calendarEvents[i].checked){
+            checkedEvents.push(calendarEvents[i].value);
+          }
+        }
+        startBounds = document.getElementById("StartTime").value;
+        endBounds = document.getElementById("EndTime").value;
+        dateRanges = document.getElementById("daterange").value;
+        meetingID = document.getElementById("meetingID").value;
+        userEmail = document.getElementById("userEmail").value;
+        $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges,
+                                      meetingID: meetingID, userEmail: userEmail}, 
+          function(data) { 
+              var toList = data.result;
+              var listLength = toList.length;
+              document.getElementById("busyEntries").innerHTML = "";
+              for(var i = 0; i < listLength; i++){
+                    var newElement = document.createElement("W");
+                    newElement.setAttribute('id', toList[i]);
+                    if(toList[i].substring(0,1) != "f" && toList[i].substring(0,1) != "b"){
+                        newElement.innerHTML = ("<h5>" + "<br>" + toList[i] + "\n");
+                    }
+                    else{
+                        newElement.innerHTML = ("<li>" + toList[i] + "\n");
+                    }
+                    
+                    $("#busyEntries").append(newElement);
+
+              }
+
+        });
+    }
+  </script>
+
+  </div>  <!-- container (for bootstrap) -->
+  </body> </html>

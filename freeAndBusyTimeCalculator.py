@@ -8,8 +8,6 @@ start and end time.
 
 
 def freeBusyTimes(eSet, startingBounds, endingBounds):
-    if(len(eSet) == 0):
-        return []
     freeBusyList = []
     i = 0
     for startDay, endDay in zip(startingBounds, endingBounds):
@@ -25,37 +23,37 @@ def freeBusyTimes(eSet, startingBounds, endingBounds):
                         busy = True
                         startOfDayHandled = True
                     elif eSet[i] > startDay and not startOfDayHandled:
-                        freeBusyList.append(["free ", startDay, eSet[i]])
+                        freeBusyList.append(["free: ", startDay, eSet[i]])
                         busy = True
                         startOfDayHandled = True
                     if busy:
                         if(eSet[i+1] >= endDay):
-                            freeBusyList.append(["busy ", eSet[i], endDay])
+                            freeBusyList.append(["busy: ", eSet[i], endDay])
                             i += 1
                             today = False
                         else:
-                            freeBusyList.append(["busy ", eSet[i], eSet[i+1]])
+                            freeBusyList.append(["busy: ", eSet[i], eSet[i+1]])
                         busy = False
                     elif not busy:
                         if eSet[i].format("YYYYMMDDHHmm") == endDay.format("YYYYMMDDHHmm"):
                             today = False
                         elif(eSet[i+1] >= endDay):
-                            freeBusyList.append(["free ", eSet[i], endDay])
+                            freeBusyList.append(["free: ", eSet[i], endDay])
                             today = False
                         else:
-                            freeBusyList.append(["free ", eSet[i], eSet[i+1]])
+                            freeBusyList.append(["free: ", eSet[i], eSet[i+1]])
                         busy = True
                     i += 1
                 else:
-                    freeBusyList.append(["free ", startDay, endDay])
+                    freeBusyList.append(["free: ", startDay, endDay])
                     today = False
             elif i != len(eSet):
                 if eSet[i].date() != startDay.date():
-                    freeBusyList.append(["free ", startDay, endDay])
+                    freeBusyList.append(["free: ", startDay, endDay])
                 else:
-                    freeBusyList.append(["free ", eSet[i], endDay])
+                    freeBusyList.append(["free: ", eSet[i], endDay])
                 today = False
             else:
-                freeBusyList.append(["free ", startDay, endDay])
+                freeBusyList.append(["free: ", startDay, endDay])
                 today = False
     return freeBusyList

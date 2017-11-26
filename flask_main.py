@@ -7,8 +7,8 @@ from apiclient.discovery import build  # google api
 from dateutil import tz
 from freeAndBusyTimeCalculator import freeBusyTimes
 import os
-
-
+import random
+import sys
 import json
 import logging
 
@@ -25,6 +25,7 @@ import httplib2   # used in oauth2 flow
 # Google API for services
 from apiclient import discovery
 from oauth2client.client import OAuth2WebServerFlow
+from pymongo import MongoClient
 
 ###
 # Globals
@@ -38,6 +39,12 @@ if __name__ == "__main__":
     app.debug = CONFIG.DEBUG
     app.secret_key = CONFIG.SECRET_KEY
     CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  # You'll need this
+    MONGO_CLIENT_URL = "mongodb://{}:{}@{}:{}/{}".format(
+    CONFIG.DB_USER,
+    CONFIG.DB_USER_PW,
+    CONFIG.DB_HOST,
+    CONFIG.DB_PORT,
+    CONFIG.DB)
 else:
     isMain = False
     # CONFIG = config.configuration(proxied=True)
@@ -46,17 +53,31 @@ else:
     CLIENT_SECRET_FILE = os.environ.get('google_key_file', None)
     clientId = os.environ.get('clientID', None)
     clientSecret = os.environ.get('clientSecret', None)
-
+    MONGO_CLIENT_URL = "mongodb://{}:{}@{}:{}/{}".format(
+    os.environ.get('DB_USER', None),
+    os.environ.get('DB_USER_PW', None),
+    os.environ.get('DB_HOST', None),
+    os.environ.get('DB_PORT', None),
+    os.environ.get('DB', None))
 
 
 app.logger.setLevel(logging.DEBUG)
 
 
 
-SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.googleapis.com/auth/userinfo.email',
+            "https://www.googleapis.com/auth/plus.login", 'https://www.googleapis.com/auth/plus.me', 'https://www.googleapis.com/auth/userinfo.profile']
 
 APPLICATION_NAME = 'MeetMe class project'
 
+
+try:
+    dbclient = MongoClient(MONGO_CLIENT_URL)
+    db = getattr(dbclient, CONFIG.DB)
+
+except:
+    print("Failure opening database.  Is Mongo running? Correct password?")
+    sys.exit(1)
 
 
 
@@ -91,14 +112,64 @@ def choose():
         app.logger.debug("Redirecting to authorization")
         return flask.redirect(flask.url_for('oauth2callback'))
 
-    gcal_service = get_gcal_service(credentials)
+    service = get_gcal_service(credentials)
+    gcal_service = service[0]
+    
     app.logger.debug("Returned from get_gcal_service")
+
     flask.g.calendars = list_calendars(gcal_service)
-    return render_template('index.html')
+
+
+    flask.g.meetingID = random.randint(0,10000)
+    mongoCollectionName = "a" + str(flask.g.meetingID)
+    collection = db[mongoCollectionName]
+    collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], "endTime":flask.session['endInput']})
+
+    return flask.redirect(flask.url_for('meeting', meetingID=flask.g.meetingID))
+
+@app.route("/meeting/<meetingID>")
+def meeting(meetingID):
+    # We'll need authorization to list calendars
+    # I wanted to put what follows into a function, but had
+    # to pull it back here because the redirect has to be a
+    # 'return'
+
+    # I'll need to check to see if meetingID is valid mongoDB entry. If not, redirect to a "meeting not found" page
+
+    app.logger.debug("Checking credentials for Google calendar access")
+    credentials = valid_credentials()
+    if not credentials:
+        app.logger.debug("Redirecting to authorization")
+        return flask.redirect(flask.url_for('oauth2callback'))
+
+    service = get_gcal_service(credentials)
+    gcal_service = service[0]
+    p_service = service[1]
+    flask.g.userEmail = p_service.people().get(userId="me").execute()["emails"][0]['value']
+    
+    flask.g.calendars = list_calendars(gcal_service)
+    dbCollections = db.collection_names()
+    mongoCollectionName = "a" + str(meetingID)
+    collectionExists = False
+    for collection in dbCollections:
+        if mongoCollectionName == collection:
+            collectionExists = True
+    if not collectionExists:
+        return render_template('noSuchMeeting.html')
+    startingInfo = db[mongoCollectionName].find({"init":1})
+
+    flask.session['daterange'] = startingInfo[0]["dateRange"]
+    flask.session['endInput'] = startingInfo[0]["endTime"]
+    flask.session['startInput'] = startingInfo[0]["startTime"]
+    
+    flask.g.meetingID = meetingID
+    return render_template('meeting.html')
 
 
 @app.route("/updateCalendar")
 def updateCalendar():
+    meetingID = request.args.get("meetingID", type=str)
+    userEmail = request.args.get("userEmail", type=str)
     calendarToAdd = json.loads(request.args.get("val"))
     startingBound = request.args.get("startTime", type=str)
     endingBound = request.args.get("endTime", type=str)
@@ -136,35 +207,39 @@ def updateCalendar():
     if not credentials:
         app.logger.debug("Redirecting to authorization")
         return flask.redirect(flask.url_for('oauth2callback'))
-    gcal_service = get_gcal_service(credentials)
+    service = get_gcal_service(credentials)
+    gcal_service = service[0]
     page_token = None
 
+    mongoCollectionName = "a" + meetingID
+    collection = db[mongoCollectionName]
     allEntries = []
+
+    allInDBToRemove = collection.find({"email":userEmail})
+    for e in allInDBToRemove:
+        collection.remove(e)
+
     for calendar in calendarToAdd:
         events = gcal_service.events().list(calendarId=calendar,
                                             pageToken=page_token).execute()
         arrowEntries = pullBusyTimes(events, startingBoundDateArray, endingBoundDateArray)
         for aEntry in arrowEntries:
-            allEntries.append(aEntry)
+            collectionEntry = {"start":str(aEntry[0]), "end":str(aEntry[1]), "email":userEmail, "init":0}
+            collection.insert(collectionEntry)
+
+
+    allInDBToAdd = collection.find({"init":0})
+    for e in allInDBToAdd:
+        tempStart = arrow.get(e['start'])
+        tempEnd = arrow.get(e['end'])
+        allEntries.append([tempStart, tempEnd])
+
     allEntries.sort()
     unionEntries = disjointSetBusyTimes(allEntries)
     displayEntries = freeBusyTimes(unionEntries, startingBoundDateArray, endingBoundDateArray)
-    print("Display: ", displayEntries)
     formattedEntries = formatEntries(displayEntries)
 
     return flask.jsonify(result=formattedEntries)
-
-
-def formatDateTime(descriptor, startTime, startDate, endTime, endDate):
-    formattedStartDate = startDate[4:6] + "/"
-    formattedStartDate += startDate[6:8] + "/"
-    formattedStartDate += startDate[:4]
-    formattedEndDate = endDate[4:6] + "/"
-    formattedEndDate += endDate[6:8] + "/"
-    formattedEndDate += endDate[:4]
-    formattedString = descriptor + startTime + " " + formattedStartDate
-    formattedString += " - " + endTime + " " + formattedEndDate
-    return formattedString
 
 
 def leadingZero(n):
@@ -176,22 +251,19 @@ def leadingZero(n):
 
 def formatEntries(listOfEntries):
     entriesToDisplay = []
-
+    currentDay = listOfEntries[0][1].day
+    entriesToDisplay.append(str(listOfEntries[0][1].date()))
     for entry in listOfEntries:
+        if(entry[1].day != currentDay):
+            currentDay = entry[1].day
+            entriesToDisplay.append(str(entry[1].date()))
         entryStartTime = leadingZero(entry[1].hour) + ":"
         entryStartTime += leadingZero(entry[1].minute)
-        entryStartDate = str(entry[1].year)
-        entryStartDate += leadingZero(entry[1].month)
-        entryStartDate += leadingZero(entry[1].day)
 
         entryEndTime = leadingZero(entry[2].hour) + ":"
         entryEndTime += leadingZero(entry[2].minute)
-        entryEndDate = str(entry[2].year)
-        entryEndDate += leadingZero(entry[2].month)
-        entryEndDate += leadingZero(entry[2].day)
-        formatted = formatDateTime(entry[0], entryStartTime, entryStartDate,
-                                   entryEndTime, entryEndDate)
-        entriesToDisplay.append([formatted])
+        formatted = entry[0] + entryStartTime + " - " + entryEndTime
+        entriesToDisplay.append(formatted)
     return entriesToDisplay
 
 
@@ -286,8 +358,9 @@ def get_gcal_service(credentials):
     app.logger.debug("Entering get_gcal_service")
     http_auth = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http_auth)
+    plusService = discovery.build('plus', 'v1', http=http_auth)
     app.logger.debug("Returning service")
-    return service
+    return [service, plusService]
 
 
 @app.route('/oauth2callback')
@@ -369,6 +442,9 @@ def setrange():
     endingBound = request.form.get('EndTime')
     flask.session['startInput'] = startingBound
     flask.session['endInput'] = endingBound
+
+
+
     return flask.redirect(flask.url_for("choose"))
 
 #

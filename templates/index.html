@@ -3,14 +3,12 @@
 <title>Appointments</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="stylesheet" type="text/css" href="/static/css/busy.css"/>
+
 <link rel="stylesheet" type="text/css"
      href="//cdn.jsdelivr.net/bootstrap/latest/css/bootstrap.css"
 />
 
-
-<link rel="stylesheet" type="text/css"
-    href="/static/css/busy.css"
-/>
 
 <!-- jquery from a content distribution network; probably cached -->
 <script type="text/javascript"
@@ -35,25 +33,10 @@
 <body>
 <div class="container">
 
-<h1>Busy times</h1>
+<h1>Create New Meeting</h1>
 
-<!--
-  -- If there are any warnings or other messages from a prior action,
-  -- they appear above the rest of the content, just until the next 
-  -- action.
-  -->
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-
-  Start Time (eg. 09:30) &emsp;&nbsp; End Time (eg. 17:00) &emsp;&emsp;Date
+  Start Time &emsp;&emsp;&nbsp;&nbsp; End Time &emsp;&emsp;&emsp; Date
   <form action="/setrange" method="post">
     <input type="time" name="StartTime" id="StartTime"
     {% if session.startInput is defined %}
@@ -88,29 +71,16 @@
 
   </script>
 
-<br /><input type="submit" value="Choose" />
+<br /><input type="submit" value="Create" />
 </form>
-
-    <!--
-    Show the calendar list (if we have it).  This will need to be turned into
-    a form from which calendars can be picked. Up to three entries are
-    shown in each row (but the order is across then down; I would
-    prefer down then across). 
-    -->
-{% if g.calendars is defined  %}
-  <div class="row">
-  {% for cal in g.calendars if cal.selected %}
-          <input class="calendarName" type="checkbox" id="{{loop.index}}" value="{{cal.id}}"  name="calEvent" onchange="myFunction({id: id})">
-              &nbsp
-              {{ cal.summary }}
-              &nbsp &nbsp &nbsp &nbsp
-         {% if loop.index is divisibleby 3 %}
-          </div> <div class="row">
-         {% endif %}
-  {% endfor %}
-  </div>
-{% endif %}
-
+<hr>
+<br>
+<h2>Login to existing meeting</h2>
+Meeting ID
+<form>
+<input type="text" id="meetingID">
+<input type="button" id="Login" value="Login" />
+</form>
 
 
 <p id="busyEntries" name="busyEntries">
@@ -118,6 +88,15 @@
 
 
   <script>
+
+    $("#Login").click(function(event) {
+      var meetingID = document.getElementById('meetingID');
+      var location = "/meeting/" + meetingID.value;
+      window.location = location;
+      
+    });
+
+
     var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
     var PARSE_TIMES_URL = SCRIPT_ROOT + "/parse_times";
 
@@ -166,7 +145,13 @@
               for(var i = 0; i < listLength; i++){
                     var newElement = document.createElement("W");
                     newElement.setAttribute('id', toList[i]);
-                    newElement.innerHTML = ("<li>" + toList[i] + "\n");
+                    if(toList[i].substring(0,1) != "f" && toList[i].substring(0,1) != "b"){
+                        newElement.innerHTML = ("<h5>" + "<br>" + toList[i] + "\n");
+                    }
+                    else{
+                        newElement.innerHTML = ("<li>" + toList[i] + "\n");
+                    }
+                    
                     $("#busyEntries").append(newElement);
 
               }
