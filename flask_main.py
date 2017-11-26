@@ -126,11 +126,12 @@ def choose():
         if c[0] == 'a':
             nums.append(int(c[1:]))
     nums.sort()
-
+    userTimezone = request.args["userTimezone"]
     flask.g.meetingID = (nums[-1] + 1)
     mongoCollectionName = "a" + str(flask.g.meetingID)
     collection = db[mongoCollectionName]
-    collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], "endTime":flask.session['endInput']})
+    collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], 
+                        "endTime":flask.session['endInput'], "userTimezone": userTimezone})
 
     return flask.redirect(flask.url_for('meeting', meetingID=flask.g.meetingID))
 
@@ -162,6 +163,7 @@ def meeting(meetingID):
     flask.session['daterange'] = startingInfo[0]["dateRange"]
     flask.session['endInput'] = startingInfo[0]["endTime"]
     flask.session['startInput'] = startingInfo[0]["startTime"]
+    flask.session['userTimezone'] = startingInfo[0]["userTimezone"]
     
     flask.g.meetingID = meetingID
     return render_template('meeting.html')
@@ -174,7 +176,8 @@ def updateCalendar():
     calendarToAdd = json.loads(request.args.get("val"))
     startingBound = request.args.get("startTime", type=str)
     endingBound = request.args.get("endTime", type=str)
-    
+    userTimezone = request.args.get("userTimezone")
+    print("USERTIMEZONE: ", userTimezone)
 
     dateRanges = request.args.get("dates", type=str)
     dateRanges = dateRanges.split(" ")
@@ -184,9 +187,9 @@ def updateCalendar():
     startingBoundDate = dateRanges[0][2] + dateRanges[0][0] + dateRanges[0][1]
     endingBoundDate = dateRanges[1][2] + dateRanges[1][0] + dateRanges[1][1]
 
-    arrowStartBound = arrow.get(startingBoundDate + startingBound, "YYYYMMDDHH:mm", tzinfo='US/Pacific')
-    arrowEndBound = arrow.get(startingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo='US/Pacific')
-    arrowEndBoundDate = arrow.get(endingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo='US/Pacific')
+    arrowStartBound = arrow.get(startingBoundDate + startingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
+    arrowEndBound = arrow.get(startingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
+    arrowEndBoundDate = arrow.get(endingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
     arrowDayRange = arrowEndBoundDate - arrowStartBound
     numberOfDays = arrowDayRange.days
     if(arrowDayRange.seconds > 0):
@@ -340,8 +343,6 @@ def valid_credentials():
     credentials = client.OAuth2Credentials.from_json(
         flask.session['credentials'])
 
-    print("Creds: ", credentials)
-
     if (credentials.invalid or credentials.access_token_expired):
         return None
     return credentials
@@ -481,8 +482,6 @@ def setrange():
     widget.
     """
     app.logger.debug("Entering setrange")
-    flask.flash("Setrange gave us '{}'".format(
-      request.form.get('daterange')))
     daterange = request.form.get('daterange')
     flask.session['daterange'] = daterange
     daterange_parts = daterange.split()
@@ -496,9 +495,11 @@ def setrange():
     flask.session['startInput'] = startingBound
     flask.session['endInput'] = endingBound
 
+    userTimezone = request.form.get('timezone')
 
 
-    return flask.redirect(flask.url_for("choose"))
+
+    return flask.redirect(flask.url_for("choose", userTimezone=userTimezone))
 
 #
 #   Initialize session variables
@@ -522,6 +523,7 @@ def init_session_values():
     # Default time span each day, 8 to 5
     flask.session["begin_time"] = interpret_time("9am")
     flask.session["end_time"] = interpret_time("5pm")
+    flask.session["userTimezone"] = "America/Los_Angeles"
 
 
 def interpret_time(text):

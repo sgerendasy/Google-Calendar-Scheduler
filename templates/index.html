@@ -26,7 +26,12 @@
 
 <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
 <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.2/moment-with-locales.min.js"
+integrity="sha256-F4eMA/m8RMPXKF2D6cccsZi9tr8t7Mt8J3mK9laOaug="
+crossorigin="anonymous"></script>
 
+<script src="/static/js/moment-timezone-with-data-2012-2022.min.js"></script>
 
 </head>
 
@@ -35,8 +40,9 @@
 
 <h1>Create New Meeting</h1>
 
+  <br>
 
-  Start Time &emsp;&emsp;&nbsp;&nbsp; End Time &emsp;&emsp;&emsp; Date
+  Start Time &emsp;&emsp;&nbsp;&nbsp; End Time &emsp;&emsp;&emsp; Timezone
   <form action="/setrange" method="post">
     <input type="time" name="StartTime" id="StartTime"
     {% if session.startInput is defined %}
@@ -46,6 +52,23 @@
     {% if session.endInput is defined %}
          value="{{session.endInput}}"
     {% endif %}>
+          <select name="timezone" id="timezone">
+        <option id="eugeneTime" value="America/Los_Angeles">Eugene, OR</option>
+        <option value="UTC">Universal Time</option>
+        <option value="America/New_York">US EST/EDT (NY)</option>
+  <option value="America/Denver">US MST/MDT (Denver)</option>
+  <option value="America/Los_Angeles">US PST/PDT (LA)</option>
+  <option value="Pacific/Honolulu">US Pacific (Hawaii)</option>
+  <option value="Europe/Lisbon">West Europe (Lisbon)</option>
+  <option value="Europe/London">London (GMT)</option>
+  <option value="Europe/Paris">Central Europe (Paris)</option>
+  <option value="Asia/Tokyo">Tokyo</option>
+  <option value="Australia/Melbourne">Australia (Melbourne)</option>    
+        <option value="Australia/Perth">Australia (Perth)</option>
+      </select>
+  <br>
+  Date
+<br>
   <input type="text" name="daterange" id="daterange" size="12"
     {% if session.daterange is defined %}
          value="{{session.daterange}}"
@@ -68,7 +91,6 @@
         }}
        );
     });
-
   </script>
 
 <br /><input type="submit" value="Create" />
@@ -82,12 +104,12 @@ Meeting ID
 <input type="button" id="Login" value="Login" />
 </form>
 
-
 <p id="busyEntries" name="busyEntries">
 </p>
-
-
   <script>
+    tz_guess = moment.tz.guess();
+    $("#guess_tz").val(tz_guess); 
+    $("#guess_tz").html("Time zone: " + tz_guess);
 
     $("#Login").click(function(event) {
       var meetingID = document.getElementById('meetingID');
@@ -114,7 +136,7 @@ Meeting ID
     $('input[name="EndTime"]').change(
          function() {
              var endTime = $(this).val();
-                 $.getJSON(PARSE_TIMES_URL, { time:endTime}, 
+                 $.getJSON(PARSE_TIMES_URL, { time:endTime }, 
                   function(data) {
                      var time = data.result;
                      if(time["time"] == "failed"){
@@ -132,10 +154,10 @@ Meeting ID
             checkedEvents.push(calendarEvents[i].value);
           }
         }
-        startBounds = document.getElementById("StartTime").value;
-        endBounds = document.getElementById("EndTime").value;
-        dateRanges = document.getElementById("daterange").value;
-        $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges }, 
+        var startBounds = document.getElementById("StartTime").value;
+        var endBounds = document.getElementById("EndTime").value;
+        var dateRanges = document.getElementById("daterange").value;
+        $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges , tz:timeZone}, 
           function(data) { 
               var toList = data.result;
               var listLength = toList.length;

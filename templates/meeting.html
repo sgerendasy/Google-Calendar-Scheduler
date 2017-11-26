@@ -39,7 +39,7 @@
   <input type="hidden" id="daterange" value="{{session.daterange}}">
   <input type="hidden" id="meetingID" value="{{g.meetingID}}">
   <input type="hidden" id="userEmail" value="{{g.userEmail}}">
-
+  <input type="hidden" id="userTimezone" value="{{session.userTimezone}}">
 
 {{session.daterange}}
 &emsp;&emsp;
@@ -68,6 +68,24 @@
 {% endif %}
 
 
+<br>
+<A href="#" id=email>Invite Someone To Meeting</a>
+<script>
+var link = document.getElementById('email');
+
+link.onclick = function() {
+    var meetingID = document.getElementById("meetingID").value;
+    var linker = "mailto:" + "?subject=You've been invited to join a meeting!" + "&body=";
+    var message = "Please click the link below to join the meeting.%0A%0A";
+    var meetingAddress = "https://meeting-checker.herokuapp.com/meeting/"
+    linker += message;
+    linker += meetingAddress;
+    linker += meetingID;
+    linker += "%0A";
+    this.href = linker;
+};
+
+</script>
 
 
 <p id="busyEntries" name="busyEntries">
@@ -82,8 +100,9 @@
       var dateRanges = document.getElementById("daterange").value;
       var meetingID = document.getElementById("meetingID").value;
       var userEmail = document.getElementById("userEmail").value;
+      var userTimezone = document.getElementById("userTimezone").value;
     $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges,
-                                meetingID: meetingID, userEmail: userEmail}, 
+                                meetingID: meetingID, userEmail: userEmail, userTimezone: userTimezone}, 
     function(data) { 
         var toList = data.result;
         var listLength = toList.length;
