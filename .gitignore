@@ -1,7 +1,7 @@
 # Local
 secrets/*
 client_secret.json
-CONFIG.py
+credentials.ini
 node_modules
 static/js/*.min.js
 .goog_app_key.json
@@ -65,5 +65,4 @@ docs/_build/
 
 # PyBuilder
 target/
-credentials.ini
 disjointSetArrow.py
