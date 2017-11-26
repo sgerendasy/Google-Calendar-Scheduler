@@ -77,7 +77,7 @@ try:
 
 except:
     print("Failure opening database.  Is Mongo running? Correct password?")
-    print("MONGO_CLIENT_URL: " MONGO_CLIENT_URL)
+    print("MONGO_CLIENT_URL: ", MONGO_CLIENT_URL)
     sys.exit(1)
 
 
