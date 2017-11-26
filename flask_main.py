@@ -45,6 +45,7 @@ if __name__ == "__main__":
     CONFIG.DB_HOST,
     CONFIG.DB_PORT,
     CONFIG.DB)
+    configDB = CONFIG.DB
 else:
     isMain = False
     # CONFIG = config.configuration(proxied=True)
@@ -59,6 +60,7 @@ else:
     os.environ.get('DB_HOST', None),
     os.environ.get('DB_PORT', None),
     os.environ.get('DB', None))
+    configDB = os.environ.get('DB', None)
 
 
 app.logger.setLevel(logging.DEBUG)
@@ -73,12 +75,9 @@ APPLICATION_NAME = 'MeetMe class project'
 
 try:
     dbclient = MongoClient(MONGO_CLIENT_URL)
-    print("SUCCESS")
-    db = getattr(dbclient, CONFIG.DB)
-    print("SUCCESS")
+    db = getattr(dbclient, configDB)
 except:
     print("Failure opening database.  Is Mongo running? Correct password?")
-    print("MONGO_CLIENT_URL: ", MONGO_CLIENT_URL)
     sys.exit(1)
 
 
