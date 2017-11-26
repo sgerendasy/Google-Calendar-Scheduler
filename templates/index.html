@@ -157,7 +157,7 @@ Meeting ID
         var startBounds = document.getElementById("StartTime").value;
         var endBounds = document.getElementById("EndTime").value;
         var dateRanges = document.getElementById("daterange").value;
-        $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges , tz:timeZone}, 
+        $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges}, 
           function(data) { 
               var toList = data.result;
               var listLength = toList.length;

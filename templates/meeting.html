@@ -166,8 +166,9 @@ link.onclick = function() {
         var dateRanges = document.getElementById("daterange").value;
         var meetingID = document.getElementById("meetingID").value;
         var userEmail = document.getElementById("userEmail").value;
+        var userTimezone = document.getElementById("userTimezone").value;
         $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges,
-                                      meetingID: meetingID, userEmail: userEmail}, 
+                                      meetingID: meetingID, userEmail: userEmail, userTimezone: userTimezone}, 
           function(data) { 
               var toList = data.result;
               var listLength = toList.length;
