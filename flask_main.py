@@ -177,7 +177,6 @@ def updateCalendar():
     startingBound = request.args.get("startTime", type=str)
     endingBound = request.args.get("endTime", type=str)
     userTimezone = request.args.get("userTimezone")
-    print("USERTIMEZONE: ", userTimezone)
 
     dateRanges = request.args.get("dates", type=str)
     dateRanges = dateRanges.split(" ")
@@ -186,6 +185,8 @@ def updateCalendar():
     dateRanges[1] = dateRanges[1].split("/")
     startingBoundDate = dateRanges[0][2] + dateRanges[0][0] + dateRanges[0][1]
     endingBoundDate = dateRanges[1][2] + dateRanges[1][0] + dateRanges[1][1]
+
+
 
     arrowStartBound = arrow.get(startingBoundDate + startingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
     arrowEndBound = arrow.get(startingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
