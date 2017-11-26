@@ -137,8 +137,6 @@ def choose():
 
 @app.route("/meeting/<meetingID>")
 def meeting(meetingID):
-
-    app.logger.debug("In /meeting")
     credentials = valid_credentials()
     if not credentials:
         app.logger.debug("Redirecting to authorization")
@@ -175,12 +173,9 @@ def updateCalendar():
     calendarToAdd = json.loads(request.args.get("val"))
     startingBound = request.args.get("startTime", type=str)
     endingBound = request.args.get("endTime", type=str)
-    app.logger.debug("calendarToAdd:", calendarToAdd)
-    app.logger.debug("startingBound:", startingBound)
-    app.logger.debug("endingBound:", endingBound)
+    
 
     dateRanges = request.args.get("dates", type=str)
-    print("dateRanges: ", dateRanges)
     dateRanges = dateRanges.split(" ")
     dateRanges.remove("-")
     dateRanges[0] = dateRanges[0].split("/")
@@ -188,9 +183,9 @@ def updateCalendar():
     startingBoundDate = dateRanges[0][2] + dateRanges[0][0] + dateRanges[0][1]
     endingBoundDate = dateRanges[1][2] + dateRanges[1][0] + dateRanges[1][1]
 
-    arrowStartBound = arrow.get(startingBoundDate + startingBound, "YYYYMMDDHH:mm", tzinfo="local")
-    arrowEndBound = arrow.get(startingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo="local")
-    arrowEndBoundDate = arrow.get(endingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo="local")
+    arrowStartBound = arrow.get(startingBoundDate + startingBound, "YYYYMMDDHH:mm", tzinfo='US/Pacific')
+    arrowEndBound = arrow.get(startingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo='US/Pacific')
+    arrowEndBoundDate = arrow.get(endingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo='US/Pacific')
     arrowDayRange = arrowEndBoundDate - arrowStartBound
     numberOfDays = arrowDayRange.days
     if(arrowDayRange.seconds > 0):
@@ -201,8 +196,6 @@ def updateCalendar():
     for i in range(numberOfDays):
         startingBoundDateArray.append(arrowStartBound.replace(days=+i))
         endingBoundDateArray.append(arrowEndBound.replace(days=+i))
-    print("startingBoundDateArray: ", startingBoundDateArray)
-    print("endingBoundDateArray: ", endingBoundDateArray)
 
     if(startingBound == ""):
         # set default starting bound to 9:00am
@@ -225,7 +218,6 @@ def updateCalendar():
 
     allInDBToRemove = collection.find({"email":userEmail})
     for e in allInDBToRemove:
-        print("removing: ", e)
         collection.remove(e)
 
     for calendar in calendarToAdd:
@@ -244,13 +236,9 @@ def updateCalendar():
         allEntries.append([tempStart, tempEnd])
 
     allEntries.sort()
-    print("ALLENTRIES: ", allEntries)
     unionEntries = disjointSetBusyTimes(allEntries)
-    print("UNIONENTRIES: ", unionEntries)
     displayEntries = freeBusyTimes(unionEntries, startingBoundDateArray, endingBoundDateArray)
-    print("DISPLAYENTRIES: ", displayEntries)
     formattedEntries = formatEntries(displayEntries)
-    print("FORMATTEDENTRIES: ", formattedEntries)
 
     return flask.jsonify(result=formattedEntries)
 
