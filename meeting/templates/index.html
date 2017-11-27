@@ -1,3 +1,8 @@
+<!-- 
+Author: Michal Young
+Modified by: Sam Gerendasy for Project 10 - CIS 322
+Fall 2017
+ -->
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html lang="en"> <head>
 <title>Appointments</title>
@@ -44,11 +49,11 @@ crossorigin="anonymous"></script>
 
   Start Time &emsp;&emsp;&nbsp;&nbsp; End Time &emsp;&emsp;&emsp; Timezone
   <form action="/setrange" method="post">
-    <input type="time" name="StartTime" id="StartTime"
+    <input type="time" name="StartTime" id="StartTime" value="09:30"
     {% if session.startInput is defined %}
          value="{{session.startInput}}"
     {% endif %}>
-<input type="time" name="EndTime" id="EndTime"
+<input type="time" name="EndTime" id="EndTime" value="17:30"
     {% if session.endInput is defined %}
          value="{{session.endInput}}"
     {% endif %}>

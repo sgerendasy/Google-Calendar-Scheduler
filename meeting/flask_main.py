@@ -1,3 +1,12 @@
+'''
+Author: Sam Gerendasy
+Project 10 for CIS 322
+Fall 2017
+Flask redirect with arguments from: https://stackoverflow.com/questions/17057191/flask-redirect-while-passing-arguments
+Info on obtaining a google user's email address from: https://stackoverflow.com/questions/24442668/google-oauth-api-to-get-users-email-address
+
+'''
+
 import flask
 from flask import render_template
 from flask import request
@@ -31,10 +40,10 @@ from pymongo import MongoClient
 # Globals
 ###
 import config
-
+isMain = True
 app = flask.Flask(__name__)
 if __name__ == "__main__":
-    isMain = True
+    # if run from localhost, get config data from credentials.ini
     CONFIG = config.configuration()
     app.debug = CONFIG.DEBUG
     app.secret_key = CONFIG.SECRET_KEY
@@ -47,8 +56,8 @@ if __name__ == "__main__":
     CONFIG.DB)
     configDB = CONFIG.DB
 else:
+    # else if run from Heroku, ger config data from Heroku env vars
     isMain = False
-    # CONFIG = config.configuration(proxied=True)
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
     CLIENT_SECRET_FILE = os.environ.get('google_key_file', None)
@@ -70,7 +79,6 @@ app.logger.setLevel(logging.DEBUG)
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.googleapis.com/auth/userinfo.email',
             "https://www.googleapis.com/auth/plus.login", 'https://www.googleapis.com/auth/plus.me', 'https://www.googleapis.com/auth/userinfo.profile']
 
-APPLICATION_NAME = 'MeetMe class project'
 
 
 try:
@@ -79,7 +87,6 @@ try:
 except:
     print("Failure opening database.  Is Mongo running? Correct password?")
     sys.exit(1)
-
 
 
 #############################
@@ -103,10 +110,7 @@ endingBound = ""
 
 @app.route("/choose")
 def choose():
-    # We'll need authorization to list calendars
-    # I wanted to put what follows into a function, but had
-    # to pull it back here because the redirect has to be a
-    # 'return'
+    # authorize a list of calendars
     app.logger.debug("In /choose")
     credentials = valid_credentials()
     if not credentials:
@@ -115,22 +119,22 @@ def choose():
 
     service = get_gcal_service(credentials)
     gcal_service = service[0]
-    
     app.logger.debug("Returned from get_gcal_service")
-
     flask.g.calendars = list_calendars(gcal_service)
 
     dbCollections = db.collection_names()
-    num = 0
-    while(num == 0 or num in dbCollections):
-        num = random.randint(10000,100000)
+    uniqueMeetingID = 0
+    # assign a random and unique meeting ID
+    while(uniqueMeetingID == 0 or uniqueMeetingID in dbCollections):
+        uniqueMeetingID = random.randint(10000,100000)
     userTimezone = request.args["userTimezone"]
-    flask.g.meetingID = num
+    flask.g.meetingID = uniqueMeetingID
+    # prepend "a" to meetingID - mongoDB collections can't start with numbers
     mongoCollectionName = "a" + str(flask.g.meetingID)
     collection = db[mongoCollectionName]
+    # create initial collection entry with relevant meta data
     collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], 
                         "endTime":flask.session['endInput'], "userTimezone": userTimezone})
-
     return flask.redirect(flask.url_for('meeting', meetingID=flask.g.meetingID))
 
 @app.route("/meeting/<meetingID>")
@@ -417,11 +421,9 @@ def oauth2callback():
 @app.route('/oauth2callbackmeeting')
 def oauth2callbackmeeting():
     """
-    The 'flow' has this one place to call back to.  We'll enter here
-    more than once as steps in the flow are completed, and need to keep
-    track of how far we've gotten. The first time we'll do the first
-    step, the second time we'll skip the first step and do the second,
-    and so on.
+    Identical to oauth2callback, but redirects the user
+    to /meetings/<meetingNumber>. This function is called
+    when the user logs-into a meeting.
     """
     app.logger.debug("Entering oauth2callback meeting")
     if(isMain):
@@ -461,17 +463,7 @@ def oauth2callbackmeeting():
         # the main screen
         app.logger.debug("Got credentials for meeting")
         meetingID = flask.session['meetingID']
-        app.logger.debug("MEETINGID: ", meetingID)
         return flask.redirect(flask.url_for('meeting', meetingID=meetingID))
-
-#
-#  Option setting:  Buttons or forms that add some
-#     information into session state.  Don't do the
-#     computation here; use of the information might
-#     depend on what other information we have.
-#   Setting an option sends us back to the main display
-#      page, where we may put the new information to use.
-#
 
 
 @app.route('/setrange', methods=['POST'])
@@ -503,8 +495,6 @@ def setrange():
 #
 #   Initialize session variables
 #
-
-
 def init_session_values():
     """
     Start with some reasonable defaults for date and time ranges.
@@ -654,7 +644,7 @@ def format_arrow_time(time):
 #############
 
 
-if __name__ == "__main__":
+if isMain:
     # App is created above so that it will
     # exist whether this is 'main' or not
     # (e.g., if we are running under green unicorn)
