@@ -121,13 +121,11 @@ def choose():
     flask.g.calendars = list_calendars(gcal_service)
 
     dbCollections = db.collection_names()
-    nums = [0]
-    for c in dbCollections:
-        if c[0] == 'a':
-            nums.append(int(c[1:]))
-    nums.sort()
+    num = 0
+    while(num == 0 or num in dbCollections):
+        num = random.randint(10000,100000)
     userTimezone = request.args["userTimezone"]
-    flask.g.meetingID = (nums[-1] + 1)
+    flask.g.meetingID = num
     mongoCollectionName = "a" + str(flask.g.meetingID)
     collection = db[mongoCollectionName]
     collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], 
