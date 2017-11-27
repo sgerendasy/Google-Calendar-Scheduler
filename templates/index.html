@@ -8,24 +8,14 @@ Fall 2017
 <title>Appointments</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="stylesheet" type="text/css" href="/static/css/busy.css"/>
-
 <link rel="stylesheet" type="text/css"
      href="//cdn.jsdelivr.net/bootstrap/latest/css/bootstrap.css"
 />
-
 
 <!-- jquery from a content distribution network; probably cached -->
 <script type="text/javascript"
      src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
 </script>
-
-<!-- Ideally the rest of our javascript dependencies would be
-     bundled and minified with 'browserify', but I've found that
-     it difficult to handle browserify dependencies for class
-     projects.  So, we'll pick up moment and a date range picker
-     from CDNs instead.
--->
 
 <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 
@@ -112,10 +102,12 @@ Meeting ID
 <p id="busyEntries" name="busyEntries">
 </p>
   <script>
+    // default timezone set to moment's best guess
     tz_guess = moment.tz.guess();
     $("#guess_tz").val(tz_guess); 
     $("#guess_tz").html("Time zone: " + tz_guess);
 
+    // handle "Login" button click
     $("#Login").click(function(event) {
       var meetingID = document.getElementById('meetingID');
       var location = "/meeting/" + meetingID.value;
@@ -125,6 +117,7 @@ Meeting ID
     var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
     var PARSE_TIMES_URL = SCRIPT_ROOT + "/parse_times";
 
+    // make sure legal times entered into start time
     $('input[name="StartTime"]').change(
          function() {
              var startTime = $(this).val();
@@ -138,6 +131,7 @@ Meeting ID
        } // end of handler function
      );// End of getJSON
     });
+    // make sure legal times entered into end time
     $('input[name="EndTime"]').change(
          function() {
              var endTime = $(this).val();
@@ -151,38 +145,7 @@ Meeting ID
        } // end of handler function
      );// End of getJSON
     });
-    function myFunction(id) {
-        var calendarEvents = document.getElementsByName("calEvent");
-        var checkedEvents = [];
-        for(i = 0; i < calendarEvents.length; i++){
-          if(calendarEvents[i].checked){
-            checkedEvents.push(calendarEvents[i].value);
-          }
-        }
-        var startBounds = document.getElementById("StartTime").value;
-        var endBounds = document.getElementById("EndTime").value;
-        var dateRanges = document.getElementById("daterange").value;
-        $.getJSON("/updateCalendar", { val: JSON.stringify(checkedEvents), startTime: startBounds, endTime: endBounds, dates: dateRanges}, 
-          function(data) { 
-              var toList = data.result;
-              var listLength = toList.length;
-              document.getElementById("busyEntries").innerHTML = "";
-              for(var i = 0; i < listLength; i++){
-                    var newElement = document.createElement("W");
-                    newElement.setAttribute('id', toList[i]);
-                    if(toList[i].substring(0,1) != "f" && toList[i].substring(0,1) != "b"){
-                        newElement.innerHTML = ("<h5>" + "<br>" + toList[i] + "\n");
-                    }
-                    else{
-                        newElement.innerHTML = ("<li>" + toList[i] + "\n");
-                    }
-                    
-                    $("#busyEntries").append(newElement);
 
-              }
-
-        });
-    }
   </script>
 
   </div>  <!-- container (for bootstrap) -->

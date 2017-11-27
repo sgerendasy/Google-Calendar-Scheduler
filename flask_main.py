@@ -16,7 +16,7 @@ from apiclient.discovery import build  # google api
 from dateutil import tz
 from freeAndBusyTimeCalculator import freeBusyTimes
 import os
-import random
+import random  # to create a unique meetingID
 import sys
 import json
 import logging
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     CONFIG.DB)
     configDB = CONFIG.DB
 else:
-    # else if run from Heroku, ger config data from Heroku env vars
+    # else if run from Heroku, get config data from Heroku env vars
     isMain = False
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
@@ -71,22 +71,18 @@ else:
     os.environ.get('DB', None))
     configDB = os.environ.get('DB', None)
 
-
-app.logger.setLevel(logging.DEBUG)
-
-
-
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.googleapis.com/auth/userinfo.email',
-            "https://www.googleapis.com/auth/plus.login", 'https://www.googleapis.com/auth/plus.me', 'https://www.googleapis.com/auth/userinfo.profile']
-
-
-
+# access MongoDB 
 try:
     dbclient = MongoClient(MONGO_CLIENT_URL)
     db = getattr(dbclient, configDB)
 except:
-    print("Failure opening database.  Is Mongo running? Correct password?")
+    print("Failure opening database. Correct MongoDB user? Correct password?")
     sys.exit(1)
+
+app.logger.setLevel(logging.DEBUG)
+
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.googleapis.com/auth/userinfo.email',
+            "https://www.googleapis.com/auth/plus.login", 'https://www.googleapis.com/auth/plus.me', 'https://www.googleapis.com/auth/userinfo.profile']
 
 
 #############################
@@ -103,9 +99,6 @@ def index():
     if 'begin_date' not in flask.session:
         init_session_values()
     return render_template('index.html')
-
-startingBound = ""
-endingBound = ""
 
 
 @app.route("/choose")
@@ -173,6 +166,9 @@ def meeting(meetingID):
 
 @app.route("/updateCalendar")
 def updateCalendar():
+    '''
+    Returns a list of formatted google calendar entries.
+    '''
     meetingID = request.args.get("meetingID", type=str)
     userEmail = request.args.get("userEmail", type=str)
     calendarToAdd = json.loads(request.args.get("val"))
@@ -187,8 +183,6 @@ def updateCalendar():
     dateRanges[1] = dateRanges[1].split("/")
     startingBoundDate = dateRanges[0][2] + dateRanges[0][0] + dateRanges[0][1]
     endingBoundDate = dateRanges[1][2] + dateRanges[1][0] + dateRanges[1][1]
-
-
 
     arrowStartBound = arrow.get(startingBoundDate + startingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
     arrowEndBound = arrow.get(startingBoundDate + endingBound, "YYYYMMDDHH:mm", tzinfo=userTimezone)
@@ -205,11 +199,11 @@ def updateCalendar():
         endingBoundDateArray.append(arrowEndBound.replace(days=+i))
 
     if(startingBound == ""):
-        # set default starting bound to 9:00am
-        startingBound = "09:00"
+        app.logger.debug("No start time specified.")
+        exit(1)
     if(endingBound == ""):
-        # set default ending bound to 5:00pm
-        endingBound = "17:00"
+        app.logger.debug("No end time specified.")
+        exit(1)
 
     credentials = valid_credentials()
     if not credentials:
@@ -223,10 +217,12 @@ def updateCalendar():
     collection = db[mongoCollectionName]
     allEntries = []
 
+    # remove all DB entries from current user
     allInDBToRemove = collection.find({"email":userEmail})
     for e in allInDBToRemove:
         collection.remove(e)
 
+    # add selected calendars of current user to DB
     for calendar in calendarToAdd:
         events = gcal_service.events().list(calendarId=calendar,
                                             pageToken=page_token).execute()
@@ -235,7 +231,7 @@ def updateCalendar():
             collectionEntry = {"start":str(aEntry[0]), "end":str(aEntry[1]), "email":userEmail, "init":0}
             collection.insert(collectionEntry)
 
-
+    # add all DB entries for specified meetingID
     allInDBToAdd = collection.find({"init":0})
     for e in allInDBToAdd:
         tempStart = arrow.get(e['start'])
@@ -251,6 +247,10 @@ def updateCalendar():
 
 
 def leadingZero(n):
+    '''
+    A simple auxilary function which converts integers into strings,
+    prepending a "0" if the integer is < 10.
+    '''
     if(n < 10):
         return "0" + str(n)
     else:
@@ -258,6 +258,9 @@ def leadingZero(n):
 
 
 def formatEntries(listOfEntries):
+    '''
+    Returns a human-readable list of busy/free time entries and dates.
+    '''
     entriesToDisplay = []
     currentDay = listOfEntries[0][1].day
     entriesToDisplay.append(str(listOfEntries[0][1].date()))
@@ -267,7 +270,6 @@ def formatEntries(listOfEntries):
             entriesToDisplay.append(str(entry[1].date()))
         entryStartTime = leadingZero(entry[1].hour) + ":"
         entryStartTime += leadingZero(entry[1].minute)
-
         entryEndTime = leadingZero(entry[2].hour) + ":"
         entryEndTime += leadingZero(entry[2].minute)
         formatted = entry[0] + entryStartTime + " - " + entryEndTime
@@ -276,6 +278,10 @@ def formatEntries(listOfEntries):
 
 
 def pullBusyTimes(googleEvents, startingBoundDates, endingBoundDates):
+    '''
+    Returns a list of busy times that from events that fall between the selected dates/times.
+    googleEvents is a list of events from the user's Google calendar.
+    '''
     entriesToDisplay = []
     arrowEntries = []
     while True:
@@ -306,7 +312,10 @@ def pullBusyTimes(googleEvents, startingBoundDates, endingBoundDates):
 
 
 def disjointSetBusyTimes(arrowEntries):
-    # must be sorted!
+    '''
+    arrowEntries must be a sorted list
+    Returns a disjoint set from a list of timeslots
+    '''
     disjointSet = []
     for entry in arrowEntries:
         joined = False
