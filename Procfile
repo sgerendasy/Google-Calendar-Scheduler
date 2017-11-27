@@ -1,1 +1,0 @@
-web: gunicorn meeting/flask_main:app
