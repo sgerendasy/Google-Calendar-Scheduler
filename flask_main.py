@@ -21,7 +21,6 @@ import sys
 import json
 import logging
 
-
 # Date handling
 import arrow  # Replacement for datetime, based on moment.js
 # import datetime # But we still need time
