@@ -22,7 +22,7 @@ run:	env
 	($(INVENV) cd meeting/; python3 flask_main.py) ||  true
 
 test:	env
-	$(INVENV) cd meeting/; nosetests tests/test_freeTimes.py 
+	$(INVENV) nosetests tests/test_freeTimes.py 
 
 
 ##
