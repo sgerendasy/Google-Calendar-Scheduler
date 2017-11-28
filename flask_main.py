@@ -4,7 +4,7 @@ Project 10 for CIS 322
 Fall 2017
 Flask redirect with arguments from: https://stackoverflow.com/questions/17057191/flask-redirect-while-passing-arguments
 Info on obtaining a google user's email address from: https://stackoverflow.com/questions/24442668/google-oauth-api-to-get-users-email-address
-
+Method to obtain a Google client secrets file remotely from: https://developers.google.com/api-client-library/python/guide/aaa_oauth
 '''
 
 import flask

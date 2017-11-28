@@ -17,4 +17,5 @@ or visit https://meeting-checker.herokuapp.com
 ## Other information:
 Meeting IDs are generated randomly. A meeting ID is needed to login to a meeting. Anyone with a Meeting ID can add their Google calendar events, so keeping a meeting ID between the desired users is a must.  
 A mailto link is provided for convenience, but one could simply email someone a link to the webpage including the meetingID.  
-File structure was modified to satisfy Heroku's needs.
+File structure was modified to satisfy Heroku's needs.  
+Google API Scopes were added to obtain the user's Google email address.
