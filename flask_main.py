@@ -93,7 +93,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.goo
 #
 #############################
 
-app.debug.logger("GOOGLE CLIENT SECRETTTTZZZ: ", CLIENT_SECRET_FILE)
+app.logger.debug("GOOGLE CLIENT SECRETTTTZZZ: ", CLIENT_SECRET_FILE)
 
 
 @app.route("/")
