@@ -55,12 +55,14 @@ if __name__ == "__main__":
     CONFIG.DB_PORT,
     CONFIG.DB)
     configDB = CONFIG.DB
+    clientSecret = CONFIG.CLIENTSECRET
+    clientID = CONFIG.CLIENTID
 else:
     # else if run from Heroku, get config data from Heroku env vars
     isMain = False
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
-    CLIENT_SECRET_FILE = os.environ.get('google_key_file', None)
+    CLIENT_SECRET_FILE = os.environ.get('googleClientSecrets', None)
     clientId = os.environ.get('clientID', None)
     clientSecret = os.environ.get('clientSecret', None)
     MONGO_CLIENT_URL = "mongodb://{}:{}@{}:{}/{}".format(
@@ -90,6 +92,8 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.goo
 #  Pages (routed from URLs)
 #
 #############################
+
+app.debug.logger("GOOGLE CLIENT SECRETTTTZZZ: ", CLIENT_SECRET_FILE)
 
 
 @app.route("/")
