@@ -62,7 +62,8 @@ else:
     isMain = False
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
-    CLIENT_SECRET_FILE = os.environ.get('googleClientSecrets', None)
+    # CLIENT_SECRET_FILE = os.environ.get('googleClientSecrets', None)
+    # CLIENT_SECRET_FILE = Google::APIClient::ClientSecrets.new(JSON.parse(ENV['GOOGLE_KEY_FILE']))
     clientId = os.environ.get('clientID', None)
     clientSecret = os.environ.get('clientSecret', None)
     MONGO_CLIENT_URL = "mongodb://{}:{}@{}:{}/{}".format(
@@ -93,7 +94,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.goo
 #
 #############################
 
-app.logger.debug("GOOGLE CLIENT SECRETTTTZZZ: ", CLIENT_SECRET_FILE)
+# app.logger.debug("GOOGLE CLIENT SECRETTTTZZZ: ", CLIENT_SECRET_FILE)
 
 
 @app.route("/")
