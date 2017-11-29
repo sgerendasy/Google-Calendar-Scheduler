@@ -112,7 +112,7 @@ def choose():
 
     service = get_gcal_service(credentials)
     gcal_service = service[0]
-    app.logger.debug("Returned from get_gcal_service")
+    app.logger.debug("Returned from get_gcal_service: ", gcal_service)
     flask.g.calendars = list_calendars(gcal_service)
 
     dbCollections = db.collection_names()
@@ -238,6 +238,7 @@ def updateCalendar():
         tempEnd = arrow.get(e['end'])
         allEntries.append([tempStart, tempEnd])
 
+    
     allEntries.sort()
     unionEntries = disjointSetBusyTimes(allEntries)
     displayEntries = freeBusyTimes(unionEntries, startingBoundDateArray, endingBoundDateArray)
@@ -588,8 +589,9 @@ def list_calendars(service):
     the primary calendar first, and selected (that is, displayed in
     Google Calendars web app) calendars before unselected calendars.
     """
-    app.logger.debug("Entering list_calendars")
+    app.logger.debug("Entering list_calendars with service: ", service)
     calendar_list = service.calendarList().list().execute()["items"]
+    app.logger.debug("Got calendar list")
     result = []
     for cal in calendar_list:
         kind = cal["kind"]
@@ -606,6 +608,7 @@ def list_calendars(service):
         result.append(
           {"kind": kind, "id": id, "summary": summary, "selected": selected,
            "primary": primary})
+    app.logger.debug("About to return from list_calendars with: ", result)
     return sorted(result, key=cal_sort_key)
 
 
