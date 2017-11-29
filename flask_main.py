@@ -112,7 +112,7 @@ def choose():
 
     service = get_gcal_service(credentials)
     gcal_service = service[0]
-    app.logger.debug("Returned from get_gcal_service: ", gcal_service)
+    app.logger.debug("Returned from get_gcal_service")
     flask.g.calendars = list_calendars(gcal_service)
 
     dbCollections = db.collection_names()
