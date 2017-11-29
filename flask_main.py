@@ -589,7 +589,7 @@ def list_calendars(service):
     the primary calendar first, and selected (that is, displayed in
     Google Calendars web app) calendars before unselected calendars.
     """
-    app.logger.debug("Entering list_calendars with service: ", service)
+    app.logger.debug("Entering list_calendars with service")
     calendar_list = service.calendarList().list().execute()["items"]
     app.logger.debug("Got calendar list")
     result = []
