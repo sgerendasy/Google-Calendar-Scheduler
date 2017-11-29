@@ -122,7 +122,7 @@ def choose():
     while(uniqueMeetingID == 0 or uniqueMeetingID in dbCollections):
         uniqueMeetingID = random.randint(10000,100000)
     app.logger.debug("About to get timezone")
-    userTimezone = request.args["userTimezone"]
+    userTimezone = flask.session["userTimezone"]
     app.logger.debug("Got timezone: ", userTimezone)
     flask.g.meetingID = uniqueMeetingID
     # prepend "a" to meetingID - mongoDB collections can't start with numbers
