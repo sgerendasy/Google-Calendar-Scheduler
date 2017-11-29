@@ -112,18 +112,13 @@ def choose():
 
     service = get_gcal_service(credentials)
     gcal_service = service[0]
-    app.logger.debug("Returned from get_gcal_service")
     flask.g.calendars = list_calendars(gcal_service)
-    app.logger.debug("After list_calendars")
     dbCollections = db.collection_names()
-    app.logger.debug("After dbCollections")
     uniqueMeetingID = 0
     # assign a random and unique meeting ID
     while(uniqueMeetingID == 0 or uniqueMeetingID in dbCollections):
         uniqueMeetingID = random.randint(10000,100000)
-    app.logger.debug("About to get timezone")
     userTimezone = flask.session["userTimezone"]
-    app.logger.debug("Got timezone: ")
     flask.g.meetingID = uniqueMeetingID
     # prepend "a" to meetingID - mongoDB collections can't start with numbers
     mongoCollectionName = "a" + str(flask.g.meetingID)
@@ -131,7 +126,6 @@ def choose():
     # create initial collection entry with relevant meta data
     collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], 
                         "endTime":flask.session['endInput'], "userTimezone": userTimezone})
-    app.logger.debug("About to redirect to /meeting: ", flask.g.meetingID)
     return flask.redirect(flask.url_for('meeting', meetingID=flask.g.meetingID))
 
 @app.route("/meeting/<meetingID>")
