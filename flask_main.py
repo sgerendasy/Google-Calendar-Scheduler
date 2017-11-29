@@ -123,7 +123,7 @@ def choose():
         uniqueMeetingID = random.randint(10000,100000)
     app.logger.debug("About to get timezone")
     userTimezone = flask.session["userTimezone"]
-    app.logger.debug("Got timezone: ", userTimezone)
+    app.logger.debug("Got timezone: ")
     flask.g.meetingID = uniqueMeetingID
     # prepend "a" to meetingID - mongoDB collections can't start with numbers
     mongoCollectionName = "a" + str(flask.g.meetingID)
@@ -131,7 +131,7 @@ def choose():
     # create initial collection entry with relevant meta data
     collection.insert({"init":1, "dateRange":flask.session['daterange'], "startTime":flask.session['startInput'], 
                         "endTime":flask.session['endInput'], "userTimezone": userTimezone})
-    app.logger.debug("About to redirect to /meeting: ", meetingID)
+    app.logger.debug("About to redirect to /meeting: ", flask.g.meetingID)
     return flask.redirect(flask.url_for('meeting', meetingID=flask.g.meetingID))
 
 @app.route("/meeting/<meetingID>")
