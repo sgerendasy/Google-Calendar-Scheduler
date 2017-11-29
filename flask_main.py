@@ -62,8 +62,6 @@ else:
     isMain = False
     app.debug = os.environ.get('debug', None)
     app.secret_key = os.environ.get('Secret_Key', None)
-    # CLIENT_SECRET_FILE = os.environ.get('googleClientSecrets', None)
-    # CLIENT_SECRET_FILE = Google::APIClient::ClientSecrets.new(JSON.parse(ENV['GOOGLE_KEY_FILE']))
     clientId = os.environ.get('clientID', None)
     clientSecret = os.environ.get('clientSecret', None)
     MONGO_CLIENT_URL = "mongodb://{}:{}@{}:{}/{}".format(
@@ -93,8 +91,6 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', ' https://www.goo
 #  Pages (routed from URLs)
 #
 #############################
-
-# app.logger.debug("GOOGLE CLIENT SECRETTTTZZZ: ", CLIENT_SECRET_FILE)
 
 
 @app.route("/")
@@ -398,6 +394,9 @@ def oauth2callback():
             scope=SCOPES,
             redirect_uri=flask.url_for('oauth2callback', _external=True))
     else:
+    	# from Heroku, a clientID and client secrets are needed for OAuth.
+    	# Normally these are taken from client_secrets.json, 
+    	# but they can be manually entered, eliminating the need for the .json file
         flow = OAuth2WebServerFlow(client_id=clientId,
                                client_secret=clientSecret,
                                scope=SCOPES,
@@ -445,6 +444,9 @@ def oauth2callbackmeeting():
             scope=SCOPES,
             redirect_uri=flask.url_for('oauth2callbackmeeting', _external=True))
     else:
+    	# from Heroku, a clientID and client secrets are needed for OAuth.
+    	# Normally these are taken from client_secrets.json, 
+    	# but they can be manually entered, eliminating the need for the .json file
         flow = OAuth2WebServerFlow(client_id=clientId,
                                client_secret=clientSecret,
                                scope=SCOPES,
