@@ -225,7 +225,7 @@ def updateCalendar():
     for calendar in calendarToAdd:
         events = gcal_service.events().list(calendarId=calendar,
                                             pageToken=page_token).execute()
-        arrowEntries = pullBusyTimes(events, startingBoundDateArray, endingBoundDateArray)
+        arrowEntries = pullBusyTimes(events, startingBoundDateArray, endingBoundDateArray, userTimezone)
         for aEntry in arrowEntries:
             collectionEntry = {"start":str(aEntry[0]), "end":str(aEntry[1]), "email":userEmail, "init":0}
             collection.insert(collectionEntry)
@@ -277,7 +277,7 @@ def formatEntries(listOfEntries):
     return entriesToDisplay
 
 
-def pullBusyTimes(googleEvents, startingBoundDates, endingBoundDates):
+def pullBusyTimes(googleEvents, startingBoundDates, endingBoundDates, userTimezone):
     '''
     Returns a list of busy times that from events that fall between the selected dates/times.
     googleEvents is a list of events from the user's Google calendar.
@@ -289,7 +289,7 @@ def pullBusyTimes(googleEvents, startingBoundDates, endingBoundDates):
             for calendar_entry in googleEvents['items']:
                 try:
                     arrowStart = arrow.get(calendar_entry['start']['date'])
-                    arrowStart = arrowStart.replace(tzinfo='local')
+                    arrowStart = arrowStart.replace(tzinfo=userTimezone)
                     arrowEnd = arrowStart.replace(hours=endDate.hour, minutes=endDate.minute)
                     arrowStart = arrowStart.replace(hours=startDate.hour, minutes=startDate.minute)
 
