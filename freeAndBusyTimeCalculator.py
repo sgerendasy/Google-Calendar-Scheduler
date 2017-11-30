@@ -56,11 +56,11 @@ def freeBusyTimes(eSet, startingBounds, endingBounds):
                             today = False
                         # else if the end time ends after the ending bound
                         elif(eSet[i+1] >= endDay):
-                            freeBusyList.append(["free: 1", eSet[i], endDay])
+                            freeBusyList.append(["free: ", eSet[i], endDay])
                             today = False
                         # else the event fits in the day, print it
                         else:
-                            freeBusyList.append(["free: 2", eSet[i], eSet[i+1]])
+                            freeBusyList.append(["free: ", eSet[i], eSet[i+1]])
                         busy = True
                     i += 1
                 # else there are no entries for the current day
